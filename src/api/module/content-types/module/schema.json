@@ -19,7 +19,7 @@
     "title": {
       "type": "text",
       "required": true,
-      "unique": true
+      "unique": false
     },
     "order": {
       "type": "integer",

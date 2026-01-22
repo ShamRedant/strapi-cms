@@ -1,6 +1,5 @@
 module.exports = [
   "strapi::errors",
-
   {
     name: "strapi::security",
     config: {
@@ -8,7 +7,6 @@ module.exports = [
         useDefaults: true,
         directives: {
           "connect-src": ["'self'", "https:"],
-
           "img-src": [
             "'self'",
             "data:",
@@ -28,7 +26,6 @@ module.exports = [
       },
     },
   },
-
   "strapi::cors",
   "strapi::poweredBy",
   "strapi::logger",

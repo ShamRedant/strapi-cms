@@ -9,15 +9,13 @@ module.exports = ({ env }) => ({
             accessKeyId: env("AWS_ACCESS_KEY_ID"),
             secretAccessKey: env("AWS_ACCESS_SECRET"),
           },
+          signedUrlExpires: 10 * 60, 
         },
         params: {
           Bucket: env("AWS_BUCKET"),
         },
-
-        signedUrlExpires: 10 * 60, 
       },
-
-     actionOptions: {
+      actionOptions: {
         upload: { 
           ACL: null
         },
@@ -33,6 +31,3 @@ module.exports = ({ env }) => ({
     },
   },
 });
-
-
-
