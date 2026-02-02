@@ -1,5 +1,6 @@
 module.exports = [
   "strapi::errors",
+
   {
     name: "strapi::security",
     config: {
@@ -13,19 +14,18 @@ module.exports = [
             "blob:",
             "https://steps-robotics-dev.s3.ap-south-1.amazonaws.com",
           ],
-
           "media-src": [
             "'self'",
             "data:",
             "blob:",
             "https://steps-robotics-dev.s3.ap-south-1.amazonaws.com",
           ],
-
-          upgradeInsecureRequests: null,
         },
+        upgradeInsecureRequests: null,
       },
     },
   },
+
   "strapi::cors",
   "strapi::poweredBy",
   "strapi::logger",
@@ -33,6 +33,12 @@ module.exports = [
   "strapi::body",
   "strapi::session",
   "strapi::favicon",
-  "global::sign-media",
   "strapi::public",
+
+  "global::sign-media",
+
+  {
+    name: "global::file-upload-context",
+    config: {},
+  },
 ];

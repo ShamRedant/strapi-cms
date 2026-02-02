@@ -1,4 +1,29 @@
 module.exports = ({ env }) => ({
+  // =========================
+  // Email (Nodemailer / SMTP)
+  // =========================
+  email: {
+    config: {
+      provider: "nodemailer",
+      providerOptions: {
+        host: env("SMTP_HOST"),
+        port: env.int("SMTP_PORT"),
+        secure: false, // true if using 465
+        auth: {
+          user: env("SMTP_USER"),
+          pass: env("SMTP_PASS"),
+        },
+      },
+      settings: {
+        defaultFrom: env("SMTP_FROM"),
+        defaultReplyTo: env("SMTP_FROM"),
+      },
+    },
+  },
+
+  // =========================
+  // Upload (AWS S3)
+  // =========================
   upload: {
     config: {
       provider: "aws-s3",
@@ -9,19 +34,20 @@ module.exports = ({ env }) => ({
             accessKeyId: env("AWS_ACCESS_KEY_ID"),
             secretAccessKey: env("AWS_ACCESS_SECRET"),
           },
-          signedUrlExpires: 10 * 60, 
+          signedUrlExpires: 10 * 60,
         },
         params: {
           Bucket: env("AWS_BUCKET"),
         },
       },
       actionOptions: {
-        upload: { 
-          ACL: null
+        upload: {
+          ACL: null,
         },
-        uploadStream: { 
-          ACL: null
+        uploadStream: {
+          ACL: null,
         },
+        delete: {},
       },
       breakpoints: {
         large: 1000,

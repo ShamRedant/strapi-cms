@@ -642,6 +642,48 @@ export interface ApiModuleModule extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiTeacherTeacher extends Struct.CollectionTypeSchema {
+  collectionName: 'teachers';
+  info: {
+    description: '';
+    displayName: 'Teacher';
+    pluralName: 'teachers';
+    singularName: 'teacher';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.Email &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    isActive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::teacher.teacher'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    password: Schema.Attribute.String;
+    passwordSetAt: Schema.Attribute.DateTime;
+    phone: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    qualification: Schema.Attribute.String;
+    resetPasswordExpires: Schema.Attribute.DateTime & Schema.Attribute.Private;
+    resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    username: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+  };
+}
+
 export interface PluginContentReleasesRelease
   extends Struct.CollectionTypeSchema {
   collectionName: 'strapi_releases';
@@ -1158,6 +1200,7 @@ declare module '@strapi/strapi' {
       'api::global.global': ApiGlobalGlobal;
       'api::lesson.lesson': ApiLessonLesson;
       'api::module.module': ApiModuleModule;
+      'api::teacher.teacher': ApiTeacherTeacher;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;
