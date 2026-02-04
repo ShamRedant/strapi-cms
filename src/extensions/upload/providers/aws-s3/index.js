@@ -30,9 +30,16 @@ const sanitize = (name) => {
  */
 const getFolderPath = async (file, strapi) => {
   try {
+    // Check if strapi is available
+    if (!strapi || !strapi.entityService) {
+      console.warn('Strapi instance not available for folder path generation');
+      return 'uncategorized';
+    }
+
     // Check if file has related entity (lesson)
     if (!file.related || file.related.length === 0) {
-      console.log('No related entity, using default path');
+      console.log('No related entity found on file, using default path');
+      console.log('File object keys:', Object.keys(file || {}));
       return 'uncategorized';
     }
 
@@ -43,11 +50,17 @@ const getFolderPath = async (file, strapi) => {
 
     // Only process lesson files
     if (!__type || !__type.includes('lesson')) {
+      console.log('File is not related to a lesson, using default path');
       return 'uncategorized';
     }
 
     // Extract lesson ID
     const lessonId = id;
+
+    if (!lessonId) {
+      console.warn('No lesson ID found in relation');
+      return 'uncategorized';
+    }
 
     // Fetch lesson with module and course
     const lesson = await strapi.entityService.findOne(
@@ -90,6 +103,7 @@ const getFolderPath = async (file, strapi) => {
 
   } catch (error) {
     console.error('Error getting folder path:', error);
+    console.error('Error stack:', error.stack);
     return 'uncategorized';
   }
 };
@@ -109,14 +123,36 @@ const generateFileName = (file) => {
 
 module.exports = {
   init(config) {
+    // Extract credentials from config (handle both nested and flat structures)
+    const accessKeyId = config.accessKeyId || config.s3Options?.credentials?.accessKeyId;
+    const secretAccessKey = config.secretAccessKey || config.s3Options?.credentials?.secretAccessKey;
+    const region = config.region || config.s3Options?.region;
+
+    if (!accessKeyId || !secretAccessKey || !region) {
+      throw new Error('AWS S3 configuration missing: accessKeyId, secretAccessKey, or region');
+    }
+
     const s3 = new AWS.S3({
-      accessKeyId: config.accessKeyId,
-      secretAccessKey: config.secretAccessKey,
-      region: config.region,
+      accessKeyId,
+      secretAccessKey,
+      region,
       ...config.s3Options,
     });
 
     const bucket = config.params.Bucket;
+
+    if (!bucket) {
+      throw new Error('AWS S3 bucket not configured');
+    }
+
+    // Helper to get strapi instance (lazy access - available when upload happens)
+    const getStrapi = () => {
+      // Try multiple ways to access strapi instance
+      if (global.strapi) return global.strapi;
+      if (typeof strapi !== 'undefined') return strapi;
+      // If still not available, return null and handle gracefully
+      return null;
+    };
 
     return {
       /**
@@ -134,12 +170,34 @@ module.exports = {
             key = `${fileContext.path}/${fileName}`;
             console.log('Using lesson path from upload context:', key);
           } else {
+            // Fallback: try to get folder path from file.related
+            const strapi = getStrapi();
+            if (!strapi) {
+              console.warn('⚠️ Strapi instance not available - files will be uploaded to uncategorized/');
+            }
             const folderPath = await getFolderPath(file, strapi);
             const fileName = generateFileName(file);
-            key = `${folderPath}/${fileName}`;
+            
+            // Ensure folder path is always set (default to 'uncategorized' if empty)
+            const safeFolderPath = folderPath && folderPath.trim() ? folderPath.trim() : 'uncategorized';
+            key = `${safeFolderPath}/${fileName}`;
+            console.log('Using folder path from file.related:', key);
+            console.log('File object:', {
+              hasRelated: !!file.related,
+              relatedLength: file.related?.length,
+              field: file.field,
+              name: file.name
+            });
           }
           
-          console.log(`Uploading to S3: ${key}`);
+          // Ensure key always has a folder prefix (never upload to root)
+          if (!key.includes('/')) {
+            console.warn('⚠️ Key has no folder prefix, defaulting to uncategorized/');
+            const fileName = generateFileName(file);
+            key = `uncategorized/${fileName}`;
+          }
+          
+          console.log(`📤 Uploading to S3: ${key}`);
 
           // Upload to S3
           const uploadParams = {
@@ -184,12 +242,34 @@ module.exports = {
             key = `${fileContext.path}/${fileName}`;
             console.log('Using lesson path from upload context (stream):', key);
           } else {
+            // Fallback: try to get folder path from file.related
+            const strapi = getStrapi();
+            if (!strapi) {
+              console.warn('⚠️ Strapi instance not available - files will be uploaded to uncategorized/');
+            }
             const folderPath = await getFolderPath(file, strapi);
             const fileName = generateFileName(file);
-            key = `${folderPath}/${fileName}`;
+            
+            // Ensure folder path is always set (default to 'uncategorized' if empty)
+            const safeFolderPath = folderPath && folderPath.trim() ? folderPath.trim() : 'uncategorized';
+            key = `${safeFolderPath}/${fileName}`;
+            console.log('Using folder path from file.related (stream):', key);
+            console.log('File object:', {
+              hasRelated: !!file.related,
+              relatedLength: file.related?.length,
+              field: file.field,
+              name: file.name
+            });
           }
           
-          console.log(`Uploading stream to S3: ${key}`);
+          // Ensure key always has a folder prefix (never upload to root)
+          if (!key.includes('/')) {
+            console.warn('⚠️ Key has no folder prefix, defaulting to uncategorized/');
+            const fileName = generateFileName(file);
+            key = `uncategorized/${fileName}`;
+          }
+          
+          console.log(`📤 Uploading stream to S3: ${key}`);
 
           const uploadParams = {
             Bucket: bucket,

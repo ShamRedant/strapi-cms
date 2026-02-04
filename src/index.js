@@ -42,8 +42,8 @@ module.exports = {
         const lessonId = result?.id ?? result?.documentId;
         if (lessonId) {
           console.log('Lesson afterCreate triggered for:', lessonId);
-          const { reorganizeLessonFiles } = require('./api/lesson/content-types/lesson/lifecycles');
-          await reorganizeLessonFiles(lessonId);
+          const { reorganizeLessonFiles } = require('./api/lesson/utils/reorganize-files');
+          await reorganizeLessonFiles(lessonId, strapi);
         }
       },
       
@@ -52,8 +52,8 @@ module.exports = {
         const lessonId = result?.id ?? result?.documentId;
         if (lessonId) {
           console.log('Lesson afterUpdate triggered for:', lessonId);
-          const { reorganizeLessonFiles } = require('./api/lesson/content-types/lesson/lifecycles');
-          await reorganizeLessonFiles(lessonId);
+          const { reorganizeLessonFiles } = require('./api/lesson/utils/reorganize-files');
+          await reorganizeLessonFiles(lessonId, strapi);
         }
       },
     });

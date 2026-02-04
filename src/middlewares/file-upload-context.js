@@ -3,12 +3,27 @@
 module.exports = (config, { strapi }) => {
   return async (ctx, next) => {
 
-    // Only handle upload requests
-    if (!ctx.request.files || !ctx.request.url.startsWith('/upload')) {
+    // Only handle actual file upload requests
+    // Skip configuration/settings endpoints
+    const url = ctx.request.url;
+    if (url.includes('/upload/settings') || 
+        url.includes('/upload/configuration') ||
+        url.includes('/upload/config')) {
       return next();
     }
 
-    console.log('File upload middleware - URL:', ctx.request.url);
+    // Check for upload endpoints: /api/upload, /upload, or any URL with files
+    const hasFiles = ctx.request.files && 
+                     typeof ctx.request.files === 'object' && 
+                     Object.keys(ctx.request.files).length > 0;
+    
+    const isUploadRequest = (url.includes('/api/upload') || url.includes('/upload')) && hasFiles;
+    
+    if (!isUploadRequest) {
+      return next();
+    }
+
+    console.log('File upload middleware - URL:', url);
 
     let lessonId = null;
     let lessonDocumentId = null;
@@ -42,11 +57,30 @@ module.exports = (config, { strapi }) => {
 
     console.log('Resolved lesson ID:', lessonId);
 
-    if (!lessonId) return next();
+    if (!lessonId) {
+      console.log('No lesson ID found, skipping file context setup');
+      return next();
+    }
 
     const files = ctx.request.files;
+    
+    // Check if files exist and is an object
+    if (!files || typeof files !== 'object') {
+      console.log('No files found in request, skipping file context setup');
+      console.log('Request files type:', typeof files);
+      console.log('Request files value:', files);
+      return next();
+    }
 
-    Object.keys(files).forEach((key) => {
+    const fileKeys = Object.keys(files);
+    console.log('Files found:', fileKeys.length, 'file field(s):', fileKeys);
+
+    if (fileKeys.length === 0) {
+      console.log('No file fields found, skipping file context setup');
+      return next();
+    }
+
+    fileKeys.forEach((key) => {
       const fileOrFiles = files[key];
 
       const fileList = Array.isArray(fileOrFiles)
