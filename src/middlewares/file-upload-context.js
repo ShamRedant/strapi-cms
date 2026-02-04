@@ -63,7 +63,7 @@ module.exports = (config, { strapi }) => {
     }
 
     const files = ctx.request.files;
-    
+
     // Check if files exist and is an object
     if (!files || typeof files !== 'object') {
       console.log('No files found in request, skipping file context setup');

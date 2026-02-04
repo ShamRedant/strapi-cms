@@ -36,10 +36,10 @@ try {
       // Skip comments and empty lines
       if (trimmedLine && !trimmedLine.startsWith('#')) {
         const [key, ...valueParts] = trimmedLine.split('=');
-        if (key && valueParts.length > 0) {
-          const value = valueParts.join('=').trim().replace(/^["']|["']$/g, '');
-          if (!process.env[key.trim()]) {
-            process.env[key.trim()] = value;
+      if (key && valueParts.length > 0) {
+        const value = valueParts.join('=').trim().replace(/^["']|["']$/g, '');
+        if (!process.env[key.trim()]) {
+          process.env[key.trim()] = value;
           }
         }
       }
@@ -494,21 +494,21 @@ async function main() {
         for (const tableName of tableNames) {
           try {
             fileLinksResult = await pool.query(`
-              SELECT 
-                f.id as file_id,
-                f.name as file_name,
-                f.url as file_url,
-                f.ext as file_ext,
-                f.mime as file_mime,
-                f.hash as file_hash,
-                f.provider_metadata as provider_metadata,
-                frm.field as field_name
-              FROM files f
+          SELECT 
+            f.id as file_id,
+            f.name as file_name,
+            f.url as file_url,
+            f.ext as file_ext,
+            f.mime as file_mime,
+            f.hash as file_hash,
+            f.provider_metadata as provider_metadata,
+            frm.field as field_name
+          FROM files f
               INNER JOIN ${tableName} frm ON f.id = frm.file_id
-              WHERE frm.related_id = $1
-                AND frm.related_type = 'api::lesson.lesson'
-                AND frm.field = $2
-            `, [lesson.lesson_id, fieldName]);
+          WHERE frm.related_id = $1
+            AND frm.related_type = 'api::lesson.lesson'
+            AND frm.field = $2
+        `, [lesson.lesson_id, fieldName]);
             querySuccess = true;
             break;
           } catch (e) {
