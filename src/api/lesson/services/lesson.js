@@ -66,7 +66,27 @@ module.exports = createCoreService('api::lesson.lesson', ({ strapi }) => ({
           });
 
           uploadedFiles[field] = uploadedFile[0].id;
-          console.log(`✓ Uploaded ${field}`);
+          
+          // Display stored path information
+          const fileRecord = uploadedFile[0];
+          const metadata = typeof fileRecord.provider_metadata === 'string' 
+            ? JSON.parse(fileRecord.provider_metadata) 
+            : fileRecord.provider_metadata;
+          
+          console.log(`\n✅ ${field.toUpperCase()} UPLOADED & STORED IN DATABASE:`);
+          console.log(`   ╔═══════════════════════════════════════════════════════════════════╗`);
+          console.log(`   ║ File ID: ${String(fileRecord.id).padEnd(54)} ║`);
+          console.log(`   ║ File Name: ${(fileRecord.name || 'N/A').padEnd(53)} ║`);
+          console.log(`   ╠═══════════════════════════════════════════════════════════════════╣`);
+          console.log(`   ║ S3 Key Path (provider_metadata.key):                             ║`);
+          console.log(`   ║ ${(metadata?.key || 'N/A').padEnd(63)} ║`);
+          console.log(`   ╠═══════════════════════════════════════════════════════════════════╣`);
+          console.log(`   ║ Full URL (url field):                                            ║`);
+          console.log(`   ║ ${(fileRecord.url || 'N/A').padEnd(63)} ║`);
+          console.log(`   ╠═══════════════════════════════════════════════════════════════════╣`);
+          console.log(`   ║ Bucket (provider_metadata.bucket):                              ║`);
+          console.log(`   ║ ${(metadata?.bucket || 'N/A').padEnd(63)} ║`);
+          console.log(`   ╚═══════════════════════════════════════════════════════════════════╝\n`);
         }
       }
 
@@ -157,7 +177,27 @@ module.exports = createCoreService('api::lesson.lesson', ({ strapi }) => ({
           });
 
           uploadedFiles[field] = uploadedFile[0].id;
-          console.log(`✓ Uploaded new ${field}`);
+          
+          // Display stored path information
+          const fileRecord = uploadedFile[0];
+          const metadata = typeof fileRecord.provider_metadata === 'string' 
+            ? JSON.parse(fileRecord.provider_metadata) 
+            : fileRecord.provider_metadata;
+          
+          console.log(`\n✅ ${field.toUpperCase()} UPLOADED & STORED IN DATABASE (UPDATE):`);
+          console.log(`   ╔═══════════════════════════════════════════════════════════════════╗`);
+          console.log(`   ║ File ID: ${String(fileRecord.id).padEnd(54)} ║`);
+          console.log(`   ║ File Name: ${(fileRecord.name || 'N/A').padEnd(53)} ║`);
+          console.log(`   ╠═══════════════════════════════════════════════════════════════════╣`);
+          console.log(`   ║ S3 Key Path (provider_metadata.key):                             ║`);
+          console.log(`   ║ ${(metadata?.key || 'N/A').padEnd(63)} ║`);
+          console.log(`   ╠═══════════════════════════════════════════════════════════════════╣`);
+          console.log(`   ║ Full URL (url field):                                            ║`);
+          console.log(`   ║ ${(fileRecord.url || 'N/A').padEnd(63)} ║`);
+          console.log(`   ╠═══════════════════════════════════════════════════════════════════╣`);
+          console.log(`   ║ Bucket (provider_metadata.bucket):                              ║`);
+          console.log(`   ║ ${(metadata?.bucket || 'N/A').padEnd(63)} ║`);
+          console.log(`   ╚═══════════════════════════════════════════════════════════════════╝\n`);
         }
       }
 

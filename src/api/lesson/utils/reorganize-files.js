@@ -203,6 +203,20 @@ async function reorganizeLessonFiles(lessonId, strapiInstance) {
           });
 
           console.log(`     ✓ Moved and updated successfully`);
+          console.log(`\n📋 FINAL DATABASE PATH AFTER REORGANIZATION:`);
+          console.log(`   ╔═══════════════════════════════════════════════════════════════════╗`);
+          console.log(`   ║ File ID: ${String(fileItem.id).padEnd(54)} ║`);
+          console.log(`   ║ File Name: ${(fileItem.name || 'N/A').padEnd(53)} ║`);
+          console.log(`   ╠═══════════════════════════════════════════════════════════════════╣`);
+          console.log(`   ║ S3 Key Path (provider_metadata.key):                             ║`);
+          console.log(`   ║ ${newKey.padEnd(63)} ║`);
+          console.log(`   ╠═══════════════════════════════════════════════════════════════════╣`);
+          console.log(`   ║ Full URL (url field):                                            ║`);
+          console.log(`   ║ ${newUrl.padEnd(63)} ║`);
+          console.log(`   ╠═══════════════════════════════════════════════════════════════════╣`);
+          console.log(`   ║ Bucket (provider_metadata.bucket):                              ║`);
+          console.log(`   ║ ${bucket.padEnd(63)} ║`);
+          console.log(`   ╚═══════════════════════════════════════════════════════════════════╝\n`);
           filesMoved++;
         } catch (error) {
           console.error(`     ❌ Error moving file: ${error.message}`);

@@ -220,6 +220,21 @@ module.exports = {
           };
 
           console.log(`✓ Uploaded: ${result.Location}`);
+          console.log(`\n📋 DATABASE STORAGE PATH INFO:`);
+          console.log(`   ╔═══════════════════════════════════════════════════════════════════╗`);
+          console.log(`   ║ S3 Key Path (stored in provider_metadata.key):                   ║`);
+          console.log(`   ║ ${result.Key.padEnd(63)} ║`);
+          console.log(`   ╠═══════════════════════════════════════════════════════════════════╣`);
+          console.log(`   ║ Full URL (stored in url field):                                  ║`);
+          console.log(`   ║ ${result.Location.padEnd(63)} ║`);
+          console.log(`   ╠═══════════════════════════════════════════════════════════════════╣`);
+          console.log(`   ║ Provider Metadata (stored as JSON):                             ║`);
+          console.log(`   ║ {                                                                ║`);
+          console.log(`   ║   "key": "${result.Key}",                                        ║`);
+          console.log(`   ║   "bucket": "${bucket}",                                        ║`);
+          console.log(`   ║   "etag": "${result.ETag}"                                       ║`);
+          console.log(`   ║ }                                                                ║`);
+          console.log(`   ╚═══════════════════════════════════════════════════════════════════╝\n`);
           
         } catch (error) {
           console.error('S3 upload error:', error);
@@ -290,6 +305,21 @@ module.exports = {
           };
 
           console.log(`✓ Uploaded stream: ${result.Location}`);
+          console.log(`\n📋 DATABASE STORAGE PATH INFO (Stream):`);
+          console.log(`   ╔═══════════════════════════════════════════════════════════════════╗`);
+          console.log(`   ║ S3 Key Path (stored in provider_metadata.key):                   ║`);
+          console.log(`   ║ ${result.Key.padEnd(63)} ║`);
+          console.log(`   ╠═══════════════════════════════════════════════════════════════════╣`);
+          console.log(`   ║ Full URL (stored in url field):                                  ║`);
+          console.log(`   ║ ${result.Location.padEnd(63)} ║`);
+          console.log(`   ╠═══════════════════════════════════════════════════════════════════╣`);
+          console.log(`   ║ Provider Metadata (stored as JSON):                             ║`);
+          console.log(`   ║ {                                                                ║`);
+          console.log(`   ║   "key": "${result.Key}",                                        ║`);
+          console.log(`   ║   "bucket": "${bucket}",                                        ║`);
+          console.log(`   ║   "etag": "${result.ETag}"                                       ║`);
+          console.log(`   ║ }                                                                ║`);
+          console.log(`   ╚═══════════════════════════════════════════════════════════════════╝\n`);
           
         } catch (error) {
           console.error('S3 upload stream error:', error);

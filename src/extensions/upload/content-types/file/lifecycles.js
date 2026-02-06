@@ -20,10 +20,10 @@ module.exports = {
     console.log('File name:', result.name);
     console.log('Checking for lesson relations...');
     
-    // Wait a moment for relations to be established
+    // Wait a moment for relations to be established, then check and link
     setTimeout(async () => {
       await reorganizeFileIfNeeded(result.id);
-    }, 1000);
+    }, 2000); // Increased delay to ensure relations are saved
   },
   
   /**
@@ -45,6 +45,9 @@ module.exports = {
  */
 async function reorganizeFileIfNeeded(fileId) {
   try {
+    let lessonId = null;
+    let fieldName = null;
+    
     // Fetch the file with all its relations
     const file = await strapi.db.query('plugin::upload.file').findOne({
       where: { id: fileId },
@@ -57,29 +60,112 @@ async function reorganizeFileIfNeeded(fileId) {
     }
     
     console.log('File has', file.related?.length || 0, 'relations');
+    console.log('File relations:', JSON.stringify(file.related, null, 2));
     
-    // Check if file is related to any lessons
-    if (!file.related || file.related.length === 0) {
-      console.log('No relations found, skipping reorganization');
+    // Try to get lesson info from relations
+    if (file.related && file.related.length > 0) {
+      for (const relation of file.related) {
+        console.log('Checking relation:', JSON.stringify(relation, null, 2));
+        
+        // Check various ways a lesson relation might be stored
+        const isLessonRelation = 
+          relation.__component === 'api::lesson.lesson' || 
+          relation.__type === 'api::lesson.lesson' ||
+          relation.__pivot?.related_type === 'api::lesson.lesson' ||
+          (relation.__pivot && typeof relation.__pivot === 'object' && 'field' in relation.__pivot);
+        
+        if (isLessonRelation) {
+          lessonId = relation.id || relation.documentId || relation.related_id;
+          fieldName = relation.__pivot?.field || relation.field;
+          console.log(`✓ Found lesson relation: lessonId=${lessonId}, field=${fieldName}`);
+          break;
+        }
+      }
+    }
+    
+    // Also try querying the morph table using Strapi's query builder
+    if (!lessonId) {
+      try {
+        // Get the database connection
+        const db = strapi.db;
+        const connection = db.connection;
+        
+        // Try to find in morph table - table name varies by Strapi version
+        const tableNames = ['files_related_morphs', 'files_related_mph'];
+        
+        for (const tableName of tableNames) {
+          try {
+            const result = await connection(tableName)
+              .where('file_id', fileId)
+              .where('related_type', 'api::lesson.lesson')
+              .first(['related_id', 'field']);
+            
+            if (result) {
+              lessonId = result.related_id;
+              fieldName = result.field;
+              console.log(`📋 Found lesson relation in ${tableName}: lessonId=${lessonId}, field=${fieldName}`);
+              break;
+            }
+          } catch (tableError) {
+            // Table doesn't exist, try next
+            continue;
+          }
+        }
+      } catch (dbError) {
+        console.log('Could not query morph table:', dbError.message);
+      }
+    }
+    
+    // If we still don't have lesson info, skip
+    if (!lessonId) {
+      console.log('No lesson relation found, skipping reorganization and linking');
       return;
     }
     
-    // Find lesson relations
-    for (const relation of file.related) {
-      // Check if this is a lesson relation
-      if (relation.__component === 'api::lesson.lesson' || 
-          relation.__type === 'api::lesson.lesson' ||
-          relation.__pivot?.related_type === 'api::lesson.lesson') {
+    // Link file to lesson's field if field name is provided
+    if (fieldName && ['teacher_file', 'student_file', 'homework_file', 'ppt_file'].includes(fieldName)) {
+      try {
+        console.log(`🔗 Linking file ${file.id} to lesson ${lessonId} field: ${fieldName}`);
         
-        console.log('✓ Found lesson relation!');
+        // Check current lesson state
+        const currentLesson = await strapi.entityService.findOne('api::lesson.lesson', lessonId, {
+          fields: ['id', fieldName],
+        });
         
-        // Get the lesson ID
-        const lessonId = relation.id || relation.documentId;
-        
-        if (!lessonId) {
-          console.log('Could not determine lesson ID');
-          continue;
+        if (!currentLesson) {
+          console.log(`⚠️ Lesson ${lessonId} not found`);
+          return;
         }
+        
+        // Check if file is already linked (compare IDs)
+        const currentFileId = currentLesson[fieldName]?.id || currentLesson[fieldName];
+        if (currentFileId !== file.id) {
+          try {
+            // Use entityService.update - this is the correct way to update media relations
+            await strapi.entityService.update('api::lesson.lesson', lessonId, {
+              data: {
+                [fieldName]: file.id,
+              },
+            });
+            
+            console.log(`✅ File ${file.id} linked to lesson ${lessonId}.${fieldName}`);
+          } catch (updateError) {
+            console.error(`❌ Error updating lesson ${lessonId}.${fieldName}:`, updateError.message);
+            console.error(`   Error details:`, updateError);
+          }
+        } else {
+          console.log(`✓ File already linked to lesson ${lessonId}.${fieldName}`);
+        }
+      } catch (linkError) {
+        console.error(`❌ Error linking file to lesson field:`, linkError);
+        console.error('Error details:', linkError.message);
+        if (linkError.stack) {
+          console.error('Stack:', linkError.stack);
+        }
+      }
+    } else {
+      console.log(`⚠️ Field name '${fieldName}' is not a valid lesson file field`);
+    }
         
         // Fetch lesson with module and course
         const lesson = await strapi.entityService.findOne(
